@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>设备调试</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+  <ul id="messages"></ul>
+  <form id="form" action="">
+    <select name="" id="command">
+      <option value="none">请选择指令</option>
+    </select><input id="input" autocomplete="off" placeholder="请输入参数以分号;进行分割" /><button>Send</button>
+  </form>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let counter = 0;
+
+    const socket = io({
+      auth: {
+        serverOffset: 0
+      },
+      ackTimeout: 10000,
+      retries: 3,
+    });
+
+    let commands = ['livePlayer start', 'livePlayer stop', 'WakeUp', 'workModel', 'EventsTimeSectionDump', 'Reboot', 'AlarmTime', 'AlarmTimeGap', 'BlueToothBind', 'Device4GBind'];
+
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+    var command = document.getElementById('command');
+
+    for (var i = 0; i < commands.length; i++) {
+      var result = new Option(commands[i]);
+      command.options.add(result);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      var command = document.getElementById('command');
+      var index = command.selectedIndex
+      let selectCommand = command.options[index].value
+      if (input.value && selectCommand != "none") {
+        console.log("发送消息:" + selectCommand + ":" + input.value)
+
+        const clientOffset = `${socket.id}-${counter++}`;
+        socket.emit(selectCommand, input.value, clientOffset);
+        input.value = '';
+
+      }
+    });
+
+    socket.onAny((event, msg, serverOffset) => {
+      const item = document.createElement('li');
+      item.textContent = event + ":" + msg;
+      messages.appendChild(item);
+      window.scrollTo(0, document.body.scrollHeight);
+      socket.auth.serverOffset = serverOffset;
+    });
+
+    // socket.on('response', (msg, serverOffset) => {
+    //   const item = document.createElement('li');
+    //   item.textContent = msg;
+    //   messages.appendChild(item);
+    //   window.scrollTo(0, document.body.scrollHeight);
+    //   socket.auth.serverOffset = serverOffset;
+    // });
+  </script>
+</body>
+
+</html>

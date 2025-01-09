@@ -1,0 +1,3 @@
+# DebugRemoteServer
+
+使用socket.io集成的node服务，支持server和client的通信命令下发
